@@ -118,5 +118,6 @@ if __name__ == '__main__':
     storage_cost = 5
     storage_bound = [0, 1000]
 
+
     print(solve_model(part, target, cost, inventory, demand, storage_cost, storage_bound))
 
