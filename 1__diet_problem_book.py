@@ -32,13 +32,14 @@ def solve_diet(N):
         s.Add(s.Sum([f[i]*N[i][j] for i in range(nbF)])<=N[NMax][j])
     s.Minimize(s.Sum([f[i]*N[i][FCost] for i in range(nbF)]))
     rc = s.Solve()
-    return rc,ObjVal(s),SolVal(f)
+    return rc, get_objective_value(s), get_solution_variables(f)
 
 
 
 
 if __name__ == '__main__':
-    problem = gen_diet_problem(2, 3)
-    print(problem)
+    problem = gen_diet_problem(3, 4)
+    for row in problem:
+        print(row)
     rc,s_obj, f_obj = solve_diet(problem)
     print(rc, s_obj, f_obj)

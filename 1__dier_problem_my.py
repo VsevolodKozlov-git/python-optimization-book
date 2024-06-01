@@ -1,29 +1,41 @@
 from ortools.linear_solver import pywraplp
 import numpy as np
+from tools import get_objective_value, get_solution_variables
 
-N = np.array([[1, 2, 1],
-              [2, 1, 1]])
-cost = [3, 4]
-f_mn = [0, 0]
-f_mx = [20, 20]
-n_mn =[10, 20, 10]
 
-def solve():
+def solve(ing_nutr, ing_cost, ing_max, nutr_min):
+    """
+    :param ing_nutr: ing_nutr[i][j] - сколько вещества j в игредиенте i
+    :param ing_cost: ing_cost[i] - сколько стоит ингредиент i
+    :param ing_max: ing_max[i] - максимальное количество игредиента i
+    :param nutr_min: nutr_min[i] - какое минимальное количество вещества i необходимо
+    """
     s = pywraplp.Solver('food solver',
                         pywraplp.Solver.GLOP_LINEAR_PROGRAMMING)
-    nf = len(N)
-    nn = len(N[0])
-    f = [s.NumVar(f_mn[i], f_mx[i], f'f[{i}]') for i in range(nf)]
-    res = s.NumVar(0, 1000, 'result')
-    for j in range(nn):
-        s.Add(s.Sum(f[i]*N[i, j] for i in range(nf)) >= n_mn[j])
-    s.Add(res == s.Sum([f[i]*cost[i] for i in range(nf)]))
-    s.Minimize(res)
-    s.Solve()
-    # SolutionValue может быть получен только внутри одной области видимости. Такова жизнь(
-    return f[0].SolutionValue()
+    ing_n = len(ing_nutr) # Количество игредиентов
+    nutr_n = len(ing_nutr[0]) # Количество веществ
+    # Объявим переменную
+    x = [s.NumVar(0, ing_max[i], f'x[{i}]') for i in range(ing_n)]
+    # Количество полезных веществ должно быть больше минимума
+    for j in range(nutr_n):
+        s.Add(s.Sum(x[i] * ing_nutr[i][j] for i in range(ing_n)) >= nutr_min[j])
+    # Введем переменную для затрат
+    costs = s.NumVar(0, s.infinity(), 'costs')
+    s.Add(costs == s.Sum([x[i] * ing_cost[i] for i in range(ing_n)]))
+    # Минимизируем затраты
+    s.Minimize(costs)
+    solution_code = s.Solve()
+    return solution_code, get_objective_value(s), get_solution_variables(x)
 
 
 if __name__ == '__main__':
-    print(solve())
-    # print([e.SolutionValue() for e in f])
+    ing_nutr = [[785, 4928, 843, 26],
+    [946, 7973, 7302, 77],
+    [570, 5172, 6106,49]]
+    ing_cost = [4.14, 6.6,	6.6]
+    ing_max = [20, 20, 15]
+    nutr_min = [41120, 13598, 14260, 601]
+    status_code, costs, x = solve(ing_nutr, ing_cost, ing_max, nutr_min)
+    print(f'status code: {status_code}')
+    print(f'Затраты: {costs}')
+    print(f'Количество игредиентов:{x}')

@@ -35,7 +35,7 @@ def solve():
 
     s.Maximize(profit)
     solver_exit_code = s.Solve()
-    return solver_exit_code, ObjVal(s), SolVal(o)
+    return solver_exit_code, get_objective_value(s), get_solution_variables(o)
 
 
 if __name__ == '__main__':
